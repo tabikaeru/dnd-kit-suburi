@@ -1,2 +1,2 @@
-import Page from '~/components/pages/page'
+import Page from '~/components/pages'
 export default Page

@@ -3,6 +3,7 @@ import React, { useEffect } from 'react'
 import { AppProps } from 'next/app'
 import { ThemeProvider, StyledEngineProvider } from '@mui/material/styles'
 import { CacheProvider, EmotionCache } from '@emotion/react'
+import { DndContext } from '@dnd-kit/core'
 import { theme } from '~/styles/theme'
 import createEmotionCache from '~/createEmotionCache'
 const clientSideEmotionCache = createEmotionCache()
@@ -23,7 +24,9 @@ const MyApp = ({ Component, emotionCache = clientSideEmotionCache, pageProps }: 
     <CacheProvider value={emotionCache}>
       <StyledEngineProvider injectFirst>
         <ThemeProvider theme={theme}>
-          <Component {...pageProps} />
+          <DndContext>
+            <Component {...pageProps} />
+          </DndContext>
         </ThemeProvider>
       </StyledEngineProvider>
     </CacheProvider>
