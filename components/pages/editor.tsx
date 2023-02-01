@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react'
+import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { useDraggable, useDroppable, useDndContext, DragOverlay, DndContext, DragEndEvent, DragStartEvent, ClientRect } from '@dnd-kit/core'
 import { createSnapModifier } from '@dnd-kit/modifiers'
 import { Coordinates } from '@dnd-kit/utilities'
@@ -225,12 +225,17 @@ const Page = () => {
   const [artifacts, setArtifacts] = useState<Artifact[]>([])
   const [activeId, setActiveId] = useState<string>(null)
   const [activeArtifactStartCoordinate, setActiveArtifactStartCoordinate] = useState<Coordinates>({ x: null, y: null })
-  const artbordSize: DOMRect = useMemo(() => {
-    if (typeof window === 'object') {
-      return document.getElementById(ARTBORD_ID)?.getBoundingClientRect()
-    }
-    return null
+  const [myDocument, setMyDocument] = useState<Document>()
+
+  useEffect(() => {
+    setMyDocument(document)
   }, [])
+
+  const artbordSize: DOMRect | null | undefined = useMemo(() => {
+    if (!myDocument) return null
+    return myDocument.getElementById(ARTBORD_ID)?.getBoundingClientRect()
+  }, [myDocument])
+
   const findArtifact = useCallback(
     (activeId: string) => {
       if (INGREDIENT_ARTIFACT_DICTIONARY[activeId]) return INGREDIENT_ARTIFACT_DICTIONARY[activeId]
@@ -242,17 +247,14 @@ const Page = () => {
     const targetArtifact: Artifact = findArtifact(activeId)
     if (!artbordSize || !targetArtifact) return
 
-    const isFromLeftPanel = !!INGREDIENT_ARTIFACT_DICTIONARY[targetArtifact?.id]
-    switch (isFromLeftPanel) {
-      case false:
-        const deNormalizedArtifactFirstCoordinatesFromArtbordStartPoint = deNormalizeCoordinates(targetArtifact.coordinates, artbordSize)
-        const deNormalizedArtifactFirstCoordinatesFromBrowserStartPoint = {
-          x: deNormalizedArtifactFirstCoordinatesFromArtbordStartPoint.x + artbordSize.left,
-          y: deNormalizedArtifactFirstCoordinatesFromArtbordStartPoint.y + artbordSize.top,
-        }
-
-        setActiveArtifactStartCoordinate(deNormalizedArtifactFirstCoordinatesFromBrowserStartPoint)
-        break
+    const isFromArtbord = !INGREDIENT_ARTIFACT_DICTIONARY[targetArtifact?.id]
+    if (isFromArtbord && targetArtifact.coordinates) {
+      const deNormalizedArtifactFirstCoordinatesFromArtbordStartPoint = deNormalizeCoordinates(targetArtifact.coordinates, artbordSize)
+      const deNormalizedArtifactFirstCoordinatesFromBrowserStartPoint = {
+        x: deNormalizedArtifactFirstCoordinatesFromArtbordStartPoint.x + artbordSize.left,
+        y: deNormalizedArtifactFirstCoordinatesFromArtbordStartPoint.y + artbordSize.top,
+      }
+      setActiveArtifactStartCoordinate(deNormalizedArtifactFirstCoordinatesFromBrowserStartPoint)
     }
 
     return {
